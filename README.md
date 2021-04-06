@@ -1,3 +1,3 @@
 # ns-pancake
 PanCake web  
-https://github.io/ichigojam/ns-pancake/  
+https://ichigojam.github.io/ns-pancake/  
