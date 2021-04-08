@@ -1,5 +1,7 @@
 import { setUI, getContext } from "./canvasutil.mjs";
 import { PANCAKE_PALETTE } from "./PANCAKE_PALETTE.mjs";
+import { IMG } from "./IMG.mjs";
+import { SPRITE } from "./SPRITE.mjs";
 
 const dw = 80;
 const dh = 45;
@@ -264,6 +266,21 @@ class NSPanCake extends HTMLElement {
 				this.clearDots(n);
 				continue;
 			}
+			n = s.indexOf("PC IMAGE ");
+			if (n >= 0) {
+				n = parseInt16(s.substring(n + "PC IMAGE ".length).split(" ")[0]);
+				this.image(n);
+				continue;
+			}
+			n = s.indexOf("PC STAMPS ");
+			if (n >= 0) {
+				const ss2 = s.substring(n + "PC STAMPS ".length).split(" ");
+				const x = parseInt16(ss2[0]);
+				const y = parseInt16(ss2[1]);
+				const idx = parseInt16(ss2[2]);
+				this.stamps(x, y, idx);
+				continue;
+			}
 		}
 		this.g.draw();
 	};
@@ -279,6 +296,34 @@ class NSPanCake extends HTMLElement {
 	}
 	clear() {
 		this.clearDots();
+		this.g.draw();
+	}
+	image(n) {
+		const d = IMG[n];
+		if (!d) {
+			return;
+		}
+		for (let i = 0; i < d.height; i++) {
+			for (let j = 0; j < d.width; j++) {
+				this.drawDot(j, i, parseInt(d.data.charAt(j + i * d.width), 16));
+			}
+		}
+		this.g.draw();
+	}
+	stamps(x, y, idx) {
+		const d = SPRITE[idx];
+		if (!d) {
+			return;
+		}
+		const transcolor = d.data.charAt(0);
+		for (let i = 0; i < d.height; i++) {
+			for (let j = 0; j < d.width; j++) {
+				const c = d.data.charAt(j + i * d.width);
+				if (c != transcolor) {
+					this.drawDot(x + j, y + i, parseInt(c, 16));
+				}
+			}
+		}
 		this.g.draw();
 	}
 }

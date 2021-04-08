@@ -56,12 +56,22 @@ input[type=radio], input[type=checkbox] {
 	display: inline-block;
 	padding: 10px;
 }
+#buttons > button {
+	margin: 0 4em;
+}
 #title {
 	margin: 0.5em;
 	font-size: 150%;
 }
 #credit {
 	margin: 1em;
+}
+#commands {
+	border: 2px solid gray;
+	margin: .5em;
+	padding: .5em;
+	text-align: left;
+	display: inline-block;
 }
 </style>
 </head>
@@ -72,7 +82,10 @@ input[type=radio], input[type=checkbox] {
 	<ns-pancake id="pancake"></ns-pancake>
 	<input type="text" id="url" value="./test/openspc2-12.txt"><button id="btnget">GET</button><br>
 	<textarea id="ta"></textarea><br>
-	<button id="btnparse">RUN</button><br>
+	<div id="buttons">
+		<button id="btnparse">RUN</button>
+		<button id="btndemo">DEMO</button>
+	</div>
 </div>
 
 <script type="module">
@@ -81,13 +94,23 @@ const ph = 45;
 const rnd = (n) => Math.random() * n >> 0;
 
 // pancake test
-const t = setInterval(() => {
-	pancake.clear();
-	for (let i = 0; i < 100; i++) {
+const drawDemo = () => {
+	pancake.image(rnd(8));
+	for (let i = 0; i < 30; i++) {
 		pancake.line(pw / 2, ph / 2, rnd(pw), rnd(ph), rnd(16));
 		pancake.pset(rnd(pw), rnd(ph), rnd(16));
 	}
-}, 500);
+	for (let i = 0; i < 10; i++) {
+		pancake.stamps(rnd(pw - 8), rnd(ph - 8), rnd(0xb0));
+	}
+};
+let t;
+const demo = () => {
+	drawDemo();
+	clearInterval(t);
+	t = setInterval(drawDemo, 1000);
+};
+demo();
 
 btnget.onclick = async () => {
 	clearInterval(t);
@@ -99,10 +122,18 @@ btnparse.onclick = () => {
 	clearInterval(t);
 	pancake.parse(ta.value);
 };
+btndemo.onclick = demo;
 </script>
 
 <div>
 こどもパソコン「<a href=https://ichigojam.net/>IchigoJam</a>」の拡張ボード「<a href=http://pancake.shizentai.jp/>PanCake</a>」をエミュレートする拡張タグ「<a href="https://github.com/ichigojam/ns-pancake/">ns-pancake</a>」タグ使用
+<div id=commands>
+	使用可能コマンド<br>
+	PC CLEAR cn (cn: 00-0f) / pancake.clear(cn)<br>
+	PC LINE x1 y1 x2 y2 cn (cn: 00-0f) / pancake.line(x1, y1, x2, y2, cn)<br>
+	PC STAMPS px py si (si: 00-2f) / pancake.stamps(x, y, si)<br>
+	PC IMAGE in (in: 00-07) / pancake.image(idx)<br>
+</div>
 </div>
 
 <div id='credit'>
