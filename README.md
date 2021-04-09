@@ -7,4 +7,9 @@ CC BY-NC Natural-Style
 http://pancake.shizentai.jp/  
 
 ## blog
-https://fukuno.jig.jp/3177  
+https://fukuno.jig.jp/3179  
+
+## lib
+arian/pngjs: Pure JavaScript PNG decoder  
+https://github.com/arian/pngjs  
+
