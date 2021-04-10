@@ -157,7 +157,9 @@ class NSPanCake extends HTMLElement {
 					const c = col[dots[j + i * dw]];
 					const x = ox + j * tw;
 					const y = oy + i * tw;
-					if (c === null) {
+					if (!c) {
+						/*
+						// 透明市松模様
 						const tw2 = tw / 2;
 						if (tw % 2 == 1) {
 							tw2 = (tw - 1) / 2;
@@ -168,6 +170,7 @@ class NSPanCake extends HTMLElement {
 						g.setColor(200, 200, 200);
 						g.fillRect(x + tw2, y, tw2, tw2);
 						g.fillRect(x, y + tw2, tw2, tw2);
+						*/
 					} else {
 						g.setColor(c[0], c[1], c[2]);
 						g.fillRect(x, y, tw, tw);
@@ -180,7 +183,9 @@ class NSPanCake extends HTMLElement {
 		this.g.init();
 	}
 	drawDot(x, y, c) {
-		this.dots[x + y * dw] = c;
+		if (x >= 0 && x < dw && y >= 0 && y < dh) {
+			this.dots[x + y * dw] = c;
+		}
 	}
 	clearDots(c) {
 		if (!c)
@@ -247,6 +252,7 @@ class NSPanCake extends HTMLElement {
 			n = s.indexOf("'");
 			if (n >= 0)
 				s = s.substring(0, n);
+			
 			n = s.indexOf("PC LINE ");
 			if (n >= 0) {
 				const ss2 = s.substring(n + "PC LINE ".length).split(" ");
@@ -259,6 +265,18 @@ class NSPanCake extends HTMLElement {
 //				console.log(x1 + " "+ y1);
 				continue;
 			}
+
+			n = s.indexOf("PC CIRCLE ");
+			if (n >= 0) {
+				const ss2 = s.substring(n + "PC CIRCLE ".length).split(" ");
+				const x = parseInt16(ss2[0]);
+				const y = parseInt16(ss2[1]);
+				const r = parseInt16(ss2[2]);
+				const c = parseInt16(ss2[3]);
+				this.drawCircle(x, y, r, c);
+				continue;
+			}
+
 			n = s.indexOf("PC CLEAR ");
 			if (n >= 0) {
 				n = parseInt16(s.substring(n + "PC CLEAR ".length).split(" ")[0]);
@@ -266,12 +284,36 @@ class NSPanCake extends HTMLElement {
 				this.clearDots(n);
 				continue;
 			}
+
 			n = s.indexOf("PC IMAGE ");
 			if (n >= 0) {
 				n = parseInt16(s.substring(n + "PC IMAGE ".length).split(" ")[0]);
 				this.image(n);
 				continue;
 			}
+
+			n = s.indexOf("PC STAMP ");
+			if (n >= 0) {
+				const ss2 = s.substring(n + "PC STAMP ".length).split(" ");
+				const x = parseInt16(ss2[0]);
+				const y = parseInt16(ss2[1]);
+				const tc = parseInt16(ss2[2]);
+				const ptn = ss2[3];
+				this.stamp(x, y, tc, ptn);
+				continue;
+			}
+
+			n = s.indexOf("PC STAMP1 ");
+			if (n >= 0) {
+				const ss2 = s.substring(n + "PC STAMP1 ".length).split(" ");
+				const x = parseInt16(ss2[0]);
+				const y = parseInt16(ss2[1]);
+				const cn = parseInt16(ss2[2]);
+				const ptn = ss2[3];
+				this.stamp1(x, y, cn, ptn);
+				continue;
+			}
+
 			n = s.indexOf("PC STAMPS ");
 			if (n >= 0) {
 				const ss2 = s.substring(n + "PC STAMPS ".length).split(" ");
@@ -284,6 +326,19 @@ class NSPanCake extends HTMLElement {
 		}
 		this.g.draw();
 	};
+	drawCircle(x, y, r, c) {
+		const n = 32;
+		let x2 = (x + r + .5) >> 0;
+		let y2 = (y + .5) >> 0;
+		for (let i = 1; i <= n; i++) {
+			const th = Math.PI * 2 / n * i;
+			const x1 = (Math.cos(th) * r + x + .5) >> 0;
+			const y1 = (Math.sin(th) * r + y + .5) >> 0;
+			this.drawLineDots(x1, y1, x2, y2, c);
+			x2 = x1;
+			y2 = y1;
+		}
+	}
 
 	// public
 	pset(x, y, c) {
@@ -292,6 +347,10 @@ class NSPanCake extends HTMLElement {
 	}
 	line(x1, y1, x2, y2, c) {
 		this.drawLineDots(x1 >> 0, y1 >> 0, x2 >> 0, y2 >> 0, c);
+		this.g.draw();
+	}
+	circle(x, y, r, c) {
+		this.drawCircle(x, y, r, c);
 		this.g.draw();
 	}
 	clear() {
@@ -309,6 +368,30 @@ class NSPanCake extends HTMLElement {
 			}
 		}
 		this.g.draw();
+	}
+	stamp(x, y, transcolor, ptn) {
+		const h = 8;
+		const w = 8;
+		for (let i = 0; i < h; i++) {
+			for (let j = 0; j < w; j++) {
+				const c = ptn.charAt(j + i * w);
+				if (c != transcolor) {
+					this.drawDot(x + j, y + i, parseInt(c, 16));
+				}
+			}
+		}
+		this.g.draw();
+	}
+	stamp1(x, y, c, ptn) {
+		console.log(ptn)
+		const tc = (c + 1) & 0xf;
+		const tch = tc.toString(16);
+		const ch = c.toString(16);
+		const ptn2 = [];
+		for (const c of ptn) {
+			ptn2.push(c == "1" ? ch : tch);
+		}
+		this.stamp(x, y, tc, ptn2.join(""));
 	}
 	stamps(x, y, idx) {
 		const d = SPRITE[idx];

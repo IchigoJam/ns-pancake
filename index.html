@@ -94,8 +94,13 @@ const ph = 45;
 const rnd = (n) => Math.random() * n >> 0;
 
 // pancake test
+let t = 0;
 const drawDemo = () => {
 	pancake.image(rnd(8));
+	/*
+	for (let i = 0; i < 5; i++) {
+		pancake.circle(pw / 2, ph / 2, rnd(40), rnd(16));
+	}
 	for (let i = 0; i < 30; i++) {
 		pancake.line(pw / 2, ph / 2, rnd(pw), rnd(ph), rnd(16));
 		pancake.pset(rnd(pw), rnd(ph), rnd(16));
@@ -103,23 +108,26 @@ const drawDemo = () => {
 	for (let i = 0; i < 10; i++) {
 		pancake.stamps(rnd(pw - 8), rnd(ph - 8), rnd(0xb0));
 	}
+	*/
+	//pancake.stamp1(10, 10, 2, "1111111110000001100000011000000110000001100000011000000111111111")
+	pancake.stamp(36, 18, 0, "0123456710000001100000011000000110000001100000011000000189abcdef")
 };
-let t;
+let tid;
 const demo = () => {
 	drawDemo();
 	clearInterval(t);
-	t = setInterval(drawDemo, 1000);
+	tid = setInterval(drawDemo, 1000);
 };
 demo();
 
 btnget.onclick = async () => {
-	clearInterval(t);
+	clearInterval(tid);
 	const s = await (await fetch(url.value)).text();
 	ta.value = s;
 	pancake.parse(s);
 };
 btnparse.onclick = () => {
-	clearInterval(t);
+	clearInterval(tid);
 	pancake.parse(ta.value);
 };
 btndemo.onclick = demo;
@@ -131,6 +139,9 @@ btndemo.onclick = demo;
 	使用可能コマンド<br>
 	PC CLEAR cn (cn: 00-0f) / pancake.clear(cn)<br>
 	PC LINE x1 y1 x2 y2 cn (cn: 00-0f) / pancake.line(x1, y1, x2, y2, cn)<br>
+	PC CIRCLE x y r cn (cn: 00-0f) / pancake.circle(x, y, r, cn)<br>
+	PC STAMP1 px py cn ptn (cn: 00-0f) / pancake.stamp1(x, y, cn, ptn)<br>
+	PC STAMP px py tc ptn (tc: 00-0f) / pancake.stamp(x, y, tc, ptn)<br>
 	PC STAMPS px py si (si: 00-2f) / pancake.stamps(x, y, si)<br>
 	PC IMAGE in (in: 00-07) / pancake.image(idx)<br>
 </div>
