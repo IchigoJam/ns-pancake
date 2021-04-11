@@ -97,7 +97,7 @@ const rnd = (n) => Math.random() * n >> 0;
 let t = 0;
 const drawDemo = () => {
 	pancake.image(rnd(8));
-	/*
+	
 	for (let i = 0; i < 5; i++) {
 		pancake.circle(pw / 2, ph / 2, rnd(40), rnd(16));
 	}
@@ -108,9 +108,9 @@ const drawDemo = () => {
 	for (let i = 0; i < 10; i++) {
 		pancake.stamps(rnd(pw - 8), rnd(ph - 8), rnd(0xb0));
 	}
-	*/
+	
 	//pancake.stamp1(10, 10, 2, "1111111110000001100000011000000110000001100000011000000111111111")
-	pancake.stamp(36, 18, 0, "0123456710000001100000011000000110000001100000011000000189abcdef")
+	//pancake.stamp(36, 18, 0, "0123456710000001100000011000000110000001100000011000000189abcdef")
 };
 let tid;
 const demo = () => {
