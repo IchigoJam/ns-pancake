@@ -6,6 +6,8 @@ import { SPRITE } from "./SPRITE.mjs";
 const dw = 80;
 const dh = 45;
 
+const MAX_SPRITE = 16;
+
 const init = (canvas) => {
 	const getImage = function() {
 		const canvas = create("canvas");
@@ -120,7 +122,7 @@ const init = (canvas) => {
 		g.draw();
 		img.src = getImage();
 	};
-		
+
 };
 
 class NSPanCake extends HTMLElement {
@@ -134,6 +136,9 @@ class NSPanCake extends HTMLElement {
 		this.style.width = (dw * r) + "px";
 		this.style.height = (dh * r) + "px";
 		this.appendChild(canvas);
+		this.sprite = [];
+		this.spritetid = null;
+		this.usersprite = [];
 		//init(canvas);
 
 		const g = getContext(canvas);
@@ -151,6 +156,7 @@ class NSPanCake extends HTMLElement {
 	//		g.setColor(200, 200, 200);
 	//		g.fillRect(ox - 1, oy - 1, tw * dw + 2, tw * dh + 2);
 			const col = PANCAKE_PALETTE;
+
 			const dots = this.dots;
 			for (let i = 0; i < dh; i++) {
 				for (let j = 0; j < dw; j++) {
@@ -231,6 +237,77 @@ class NSPanCake extends HTMLElement {
 						this.drawDot(x2 + i, y2 + calcDiv(dy * i, dx), c);
 					}
 				}
+			}
+		}
+	}
+	drawStamp(x, y, transcolor, ptn, flip, rotate) {
+		const h = 8;
+		const w = 8;
+		if (flip) {
+			const ptn2 = [];
+			for (let i = 0; i < h; i++) {
+				for (let j = 0; j < w; j++) {
+					ptn2.push(ptn.charAt(i * w + (7 - j)));
+				}
+			}
+			ptn = ptn2.join("");
+		}
+		if (rotate == 1) {
+			const ptn2 = [];
+			for (let i = 0; i < h; i++) {
+				for (let j = 0; j < w; j++) {
+					ptn2.push(ptn.charAt((7 - j) * w + i));
+				}
+			}
+			ptn = ptn2.join("");
+		} else if (rotate == 2) {
+			const ptn2 = [];
+			for (let i = 0; i < h; i++) {
+				for (let j = 0; j < w; j++) {
+					ptn2.push(ptn.charAt((7 - i) * w + (7 - j)));
+				}
+			}
+			ptn = ptn2.join("");
+		} else if (rotate == 3) {
+			const ptn2 = [];
+			for (let i = 0; i < h; i++) {
+				for (let j = 0; j < w; j++) {
+					ptn2.push(ptn.charAt(j * w + (7 - i)));
+				}
+			}
+			ptn = ptn2.join("");
+		}
+		
+		for (let i = 0; i < h; i++) {
+			for (let j = 0; j < w; j++) {
+				const c = parseInt(ptn.charAt(j + i * w), 16);
+				if (c != transcolor) {
+					this.drawDot(x + j, y + i, c);
+				}
+			}
+		}
+	}
+	drawCircle(x, y, r, c) {
+		const n = 32;
+		let x2 = (x + r + .5) >> 0;
+		let y2 = (y + .5) >> 0;
+		for (let i = 1; i <= n; i++) {
+			const th = Math.PI * 2 / n * i;
+			const x1 = (Math.cos(th) * r + x + .5) >> 0;
+			const y1 = (Math.sin(th) * r + y + .5) >> 0;
+			this.drawLineDots(x1, y1, x2, y2, c);
+			x2 = x1;
+			y2 = y1;
+		}
+	}
+	drawImage(n) {
+		const d = IMG[n];
+		if (!d) {
+			return;
+		}
+		for (let i = 0; i < d.height; i++) {
+			for (let j = 0; j < d.width; j++) {
+				this.drawDot(j, i, parseInt(d.data.charAt(j + i * d.width), 16));
 			}
 		}
 	}
@@ -320,25 +397,89 @@ class NSPanCake extends HTMLElement {
 				const x = parseInt16(ss2[0]);
 				const y = parseInt16(ss2[1]);
 				const idx = parseInt16(ss2[2]);
-				this.stamps(x, y, idx);
+				const fs = ss2.length > 3 ? parseInt16(ss2[3]) : 0;
+				const ra = ss2.length > 4 ? parseInt16(ss2[4]) : 0;
+				this.stamps(x, y, idx, fs, ra);
 				continue;
+			}
+			{
+				const cmd = "PC SPRITE START ";
+				const n = s.indexOf(cmd);
+				if (n >= 0) {
+					const ss2 = s.substring(n + cmd.length).split(" ");
+					const bg = parseInt16(ss2[0]);
+					this.spriteStart(bg);
+					continue;
+				}
+			}
+			{
+				const cmd = "PC SPRITE CREATE ";
+				const n = s.indexOf(cmd);
+				if (n >= 0) {
+					const ss2 = s.substring(n + cmd.length).split(" ");
+					const sn = parseInt16(ss2[0]);
+					const si = parseInt16(ss2[1]);
+					this.spriteCreate(sn, si);
+					continue;
+				}
+			}
+			{
+				const cmd = "PC SPRITE MOVE ";
+				const n = s.indexOf(cmd);
+				if (n >= 0) {
+					const ss2 = s.substring(n + cmd.length).split(" ");
+					const sn = parseInt16(ss2[0]);
+					const x = parseInt16(ss2[1]);
+					const y = parseInt16(ss2[2]);
+					this.spriteMove(sn, x, y);
+					continue;
+				}
+			}
+			{
+				const cmd = "PC SPRITE FLIP ";
+				const n = s.indexOf(cmd);
+				if (n >= 0) {
+					const ss2 = s.substring(n + cmd.length).split(" ");
+					const sn = parseInt16(ss2[0]);
+					const fs = parseInt16(ss2[1]);
+					this.spriteFlip(sn, fs);
+					continue;
+				}
+			}
+			{
+				const cmd = "PC SPRITE ROTATE ";
+				const n = s.indexOf(cmd);
+				if (n >= 0) {
+					const ss2 = s.substring(n + cmd.length).split(" ");
+					const sn = parseInt16(ss2[0]);
+					const ra = parseInt16(ss2[1]);
+					this.spriteRotate(sn, ra);
+					continue;
+				}
+			}
+			{
+				const cmd = "PC SPRITE USER ";
+				const n = s.indexOf(cmd);
+				if (n >= 0) {
+					const ss2 = s.substring(n + cmd.length).split(" ");
+					const sn = parseInt16(ss2[0]);
+					const tc = parseInt16(ss2[1]);
+					const ptn = ss2[2];
+					this.spriteUser(sn, tc, ptn);
+					continue;
+				}
+			}
+			{
+				const cmd = "PC RESET";
+				const n = s.indexOf(cmd);
+				if (n >= 0) {
+					this.reset();
+					continue;
+				}
 			}
 		}
 		this.g.draw();
 	};
-	drawCircle(x, y, r, c) {
-		const n = 32;
-		let x2 = (x + r + .5) >> 0;
-		let y2 = (y + .5) >> 0;
-		for (let i = 1; i <= n; i++) {
-			const th = Math.PI * 2 / n * i;
-			const x1 = (Math.cos(th) * r + x + .5) >> 0;
-			const y1 = (Math.sin(th) * r + y + .5) >> 0;
-			this.drawLineDots(x1, y1, x2, y2, c);
-			x2 = x1;
-			y2 = y1;
-		}
-	}
 
 	// public
 	pset(x, y, c) {
@@ -358,28 +499,11 @@ class NSPanCake extends HTMLElement {
 		this.g.draw();
 	}
 	image(n) {
-		const d = IMG[n];
-		if (!d) {
-			return;
-		}
-		for (let i = 0; i < d.height; i++) {
-			for (let j = 0; j < d.width; j++) {
-				this.drawDot(j, i, parseInt(d.data.charAt(j + i * d.width), 16));
-			}
-		}
+		this.drawImage(n);
 		this.g.draw();
 	}
 	stamp(x, y, transcolor, ptn) {
-		const h = 8;
-		const w = 8;
-		for (let i = 0; i < h; i++) {
-			for (let j = 0; j < w; j++) {
-				const c = ptn.charAt(j + i * w);
-				if (c != transcolor) {
-					this.drawDot(x + j, y + i, parseInt(c, 16));
-				}
-			}
-		}
+		this.drawStamp(x, y, transcolor, ptn);
 		this.g.draw();
 	}
 	stamp1(x, y, c, ptn) {
@@ -393,12 +517,14 @@ class NSPanCake extends HTMLElement {
 		}
 		this.stamp(x, y, tc, ptn2.join(""));
 	}
-	stamps(x, y, idx) {
+	stamps(x, y, idx, fs, ra) {
 		const d = SPRITE[idx];
 		if (!d) {
 			return;
 		}
-		const transcolor = d.data.charAt(0);
+		this.drawStamp(x, y, d.tc, d.data, fs, ra);
+		/*
+		const transcolor = d.tc.toString(16); // d.data.charAt(0);
 		for (let i = 0; i < d.height; i++) {
 			for (let j = 0; j < d.width; j++) {
 				const c = d.data.charAt(j + i * d.width);
@@ -407,7 +533,90 @@ class NSPanCake extends HTMLElement {
 				}
 			}
 		}
+		*/
 		this.g.draw();
+	}
+	spriteStart(bg) {
+		clearInterval(this.spritetid);
+		if (bg != 0xff) {
+			this.spritebg = bg;
+			this.spritetid = setInterval(() => {
+				if (this.spritebg < 0x10) {
+					this.drawImage(this.spritebg);
+				} else {
+					this.clearDots(this.spritebg >> 4);
+				}
+				for (let i = 0; i < MAX_SPRITE; i++) {
+					const sp = this.sprite[i];
+					if (!sp || sp.ptn == 0xff) {
+						continue;
+					}
+					if (sp.ptn >= 0xfd) {
+						const s = this.usersprite[sp.ptn];
+						if (s) {
+							this.drawStamp(sp.x, sp.y, s.tc, s.data, sp.flip, sp.rotate);
+						}
+					} else {
+						const s = SPRITE[sp.ptn];
+						this.drawStamp(sp.x, sp.y, s.tc, s.data, sp.flip, sp.rotate);
+					}
+				}
+				this.g.draw();
+			}, 1000 / 60);
+		}
+	}
+	getSprite(sn) {
+		if (sn < 0 || sn >= MAX_SPRITE) {
+			return null;
+		}
+		const sp = this.sprite[sn];
+		if (sp) {
+			return sp;
+		}
+		return this.sprite[sn] = {
+			x: 0,
+			y: 0,
+			ptn: 0xff,
+			flip: false,
+			rotate: 0,
+		};
+	}
+	spriteCreate(sn, si) {
+		const sp = this.getSprite(sn);
+		if (sp) {
+			sp.ptn = si;
+		}
+	}
+	spriteMove(sn, px, py) {
+		const sp = this.sprite[sn];
+		if (sp) {
+			sp.x = px;
+			sp.y = py;
+		}
+	}
+	spriteFlip(sn, fs) {
+		const sp = this.sprite[sn];
+		if (sp) {
+			sp.flip = fs != 0;
+		}
+	}
+	spriteRotate(sn, ra) { // 00:0°,01:-90°,02:180°,03:90°
+		const sp = this.sprite[sn];
+		if (sp) {
+			sp.rotate = ra;
+		}
+	}
+	spriteUser(sn, tc, ptn) {
+		if (sn >= 0xfd && sn <= 0xfe) {
+			this.usersprite[sn] = { tc, data: ptn };
+		}
+	}
+	reset() {
+		this.spriteStart(0xff);
+		this.sprite = [];
+		this.spritetid = null;
+		this.usersprite = [];
+		this.clear(0);
 	}
 }
 
