@@ -188,11 +188,11 @@ class NSPanCake extends HTMLElement {
 		this.clearDots();
 		this.g.init();
 
-		if(window.AudioContext){
+		if (window.AudioContext) {
 			this.audio = new AudioContext();
 			this.audioch = new Array(4);
-		}else{
-			console.log( 'Need AudioContext.' );
+		} else {
+			console.log('Need AudioContext.');
 		}
 	}
 	drawDot(x, y, c) {
@@ -410,7 +410,7 @@ class NSPanCake extends HTMLElement {
 				continue;
 			}
 
-			if(this.audio){
+			if (this.audio) {
 				n = s.indexOf("PC SOUND1 ");
 				if (n >= 0) {
 					const ss2 = s.substring(n + "PC SOUND1 ".length).split(" ");
@@ -557,20 +557,20 @@ class NSPanCake extends HTMLElement {
 		this.g.draw();
 	}
 	sound1(cn, on, sn) {
-		let channel = cn % this.audioch.length;
+		const channel = cn % this.audioch.length;
 
 		this.audioch[channel]?.stop();
 		this.audioch[channel] = undefined;
 
-		if(sn === 0xff){
+		if (sn === 0xff) {
 			// none
-		}else{
-			let key = (sn & 0x0f) % 13;
-			let tone = ((sn & 0xf0) >> 4) % 4;
-			let octave = on % 8;
-			let t = 0;//this.audio.currentTime;
+		} else {
+			const key = (sn & 0x0f) % 13;
+			const tone = ((sn & 0xf0) >> 4) % 4;
+			const  octave = on % 8;
+			const t = 0; //this.audio.currentTime;
 
-			let gain = this.audio.createGain();
+			const gain = this.audio.createGain();
 			gain.gain.setValueAtTime(0.2, t);
 			gain.connect(this.audio.destination);
 
@@ -594,7 +594,7 @@ class NSPanCake extends HTMLElement {
 				440.000,
 				466.164,
 				493.883,
-			][key]*Math.pow(2, octave-4), t);
+			][key] * Math.pow(2, octave - 4), t);
 			this.audioch[channel].connect(gain);
 			this.audioch[channel].start();
 		}
