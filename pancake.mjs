@@ -185,9 +185,10 @@ class NSPanCake extends HTMLElement {
 			}
 		};
 		
-		this.clearDots();
 		this.g.init();
-
+		//this.clearDots();
+		this.image(0);
+    
 		if (window.AudioContext) {
 			this.audio = new AudioContext();
 			this.audioch = new Array(4);
