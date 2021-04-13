@@ -185,8 +185,9 @@ class NSPanCake extends HTMLElement {
 			}
 		};
 		
-		this.clearDots();
 		this.g.init();
+		//this.clearDots();
+		this.image(0);
 	}
 	drawDot(x, y, c) {
 		if (x >= 0 && x < dw && y >= 0 && y < dh) {
