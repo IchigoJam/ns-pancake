@@ -81,14 +81,22 @@ input[type=radio], input[type=checkbox] {
 	<div id="title">PanCake web</div>
 	<ns-pancake id="pancake"></ns-pancake><br>
 	<input type="text" id="url" value="./test/openspc2-12.txt"><button id="btnget">GET</button><br>
-	<textarea id="ta"></textarea><br>
+		<textarea id="ta">PC SPRITE START 01
+PC SPRITE USER fd 03 1122334411223344112233441122334411223344112233441122334411223344
+PC SPRITE CREATE 00 fd
+PC SPRITE MOVE 00 10 10
+PC SPRITE FLIP 00 01</textarea><br>
 	<div id="buttons">
 		<button id="btnparse">RUN</button>
-		<button id="btndemo">DEMO</button>
+		<button id="btndemo1">DEMO1</button>
+		<button id="btndemo2">DEMO2</button>
 	</div>
 </div>
 
 <script type="module">
+//import { sleep } from "https://js.sabae.cc/sleep.js";
+const sleep = msec => new Promise(r => setTimeout(r, msec));
+
 const pw = 80;
 const ph = 45;
 const rnd = (n) => Math.random() * n >> 0;
@@ -97,7 +105,7 @@ const rnd = (n) => Math.random() * n >> 0;
 let t = 0;
 const drawDemo = () => {
 	pancake.image(rnd(8));
-	/*
+	
 	for (let i = 0; i < 5; i++) {
 		pancake.circle(pw / 2, ph / 2, rnd(40), rnd(16));
 	}
@@ -108,42 +116,91 @@ const drawDemo = () => {
 	for (let i = 0; i < 10; i++) {
 		pancake.stamps(rnd(pw - 8), rnd(ph - 8), rnd(0xb0));
 	}
-	*/
 	//pancake.stamp1(10, 10, 2, "1111111110000001100000011000000110000001100000011000000111111111")
-	pancake.stamp(36, 18, 0, "0123456710000001100000011000000110000001100000011000000189abcdef")
+	//pancake.stamp(36, 18, 0, "0123456710000001100000011000000110000001100000011000000189abcdef")
+};
+const stopAll = () => {
+	pancake.reset();
+	clearInterval(tid);
+	demo2stop = true;
 };
 let tid;
-const demo = () => {
+const demo1 = () => {
+	stopAll();
 	drawDemo();
-	clearInterval(t);
 	tid = setInterval(drawDemo, 1000);
 };
+let demo2stop = false;
+const demo2 = async () => {
+	stopAll();
+	demo2stop = false;
+	const n = 5;
+	for (let i = 0;; i++) {
+		const x = i % 88 - 8;
+		if (x == -8) {
+			pancake.spriteStart(rnd(8));
+			const idx = rnd(0xb0);
+			for (let j = 0; j < n; j++) {
+				pancake.spriteCreate(j, idx);
+				//pancake.spriteFlip(j, true);
+				pancake.spriteRotate(j, j % 4);
+			}
+			const idx2 = rnd(0xb0);
+			for (let j = 0; j < n; j++) {
+				pancake.spriteCreate(j + n, idx2);
+				pancake.spriteFlip(j + n, true);
+				pancake.spriteRotate(j + n, j % 4);
+			}
+		}
+		for (let j = 0; j < n; j++) {
+			pancake.spriteMove(j, x, 0 + j * 9);
+		}
+		for (let j = 0; j < n; j++) {
+			pancake.spriteMove(j + n, 72 - x, 0 + j * 9);
+		}
+		await sleep(1000 / 30);
+		if (demo2stop) {
+			break;
+		}
+	}
+};
+const demo = demo1;
+//const demo = demo2;
 demo();
 
+
 btnget.onclick = async () => {
-	clearInterval(tid);
+	stopAll();
 	const s = await (await fetch(url.value)).text();
 	ta.value = s;
 	pancake.parse(s);
 };
 btnparse.onclick = () => {
-	clearInterval(tid);
+	stopAll();
 	pancake.parse(ta.value);
 };
-btndemo.onclick = demo;
+btndemo1.onclick = demo1;
+btndemo2.onclick = demo2;
 </script>
 
 <div>
-こどもパソコン「<a href=https://ichigojam.net/>IchigoJam</a>」の拡張ボード「<a href=http://pancake.shizentai.jp/>PanCake</a>」をエミュレートする拡張タグ「<a href="https://github.com/ichigojam/ns-pancake/">ns-pancake</a>」タグ使用<br>
+こどもパソコン「<a href=https://ichigojam.net/>IchigoJam</a>」の拡張ボード「<a href=http://pancake.shizentai.jp/>PanCake</a>」をエミュレートする拡張タグ「<a href="https://github.com/ichigojam/ns-pancake/">ns-pancake</a>」使用<br>
 <div id=commands>
 	使用可能コマンド<br>
 	PC CLEAR cn (cn: 00-0f) / pancake.clear(cn)<br>
 	PC LINE x1 y1 x2 y2 cn (cn: 00-0f) / pancake.line(x1, y1, x2, y2, cn)<br>
 	PC CIRCLE x y r cn (cn: 00-0f) / pancake.circle(x, y, r, cn)<br>
 	PC STAMP1 px py cn ptn (cn: 00-0f) / pancake.stamp1(x, y, cn, ptn)<br>
-	PC STAMP px py tc ptn (tc: 00-0f) / pancake.stamp(x, y, tc, ptn)<br>
+	PC STAMP px py tc ptn [fs] [ra] (tc: 00-0f, fs:00 or 01, ro:00-03) / pancake.stamp(x, y, tc, ptn[, fs[, ra]])<br>
 	PC STAMPS px py si (si: 00-2f) / pancake.stamps(x, y, si)<br>
 	PC IMAGE in (in: 00-07) / pancake.image(idx)<br>
+	PC SPRITE START bg (in: 00-07 or 10-f0) / pancake.spriteStart(bg)<br>
+	PC SPRITE CREATE sn si / pancake.spriteCreate(sn, si)<br>
+	PC SPRITE MOVE sn x, y / pancake.spriteMove(sn, x, y)<br>
+	PC SPRITE FLIP sn fs / pancake.spriteFlip(sn, fs)<br>
+	PC SPRITE ROTATE sn ra / pancake.spriteRotate(sn, ra)<br>
+	PC SPRITE USER sn tc ptn / pancake.spriteUser(sn, tc, ptn)<br>
+	PC RESET / pancake.reset()<br>
 </div>
 </div>
 
