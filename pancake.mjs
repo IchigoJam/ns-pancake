@@ -181,6 +181,14 @@ class NSPanCake extends HTMLElement {
 		
 		this.clearDots();
 		this.g.init();
+
+		this.audio = new AudioContext();
+		this.audioch = [
+			this.audio.createOscillator(),
+			this.audio.createOscillator(),
+			this.audio.createOscillator(),
+			this.audio.createOscillator(),
+		];
 	}
 	drawDot(x, y, c) {
 		if (x >= 0 && x < dw && y >= 0 && y < dh) {
@@ -323,6 +331,16 @@ class NSPanCake extends HTMLElement {
 				this.stamps(x, y, idx);
 				continue;
 			}
+
+			n = s.indexOf("PC SOUND1 ");
+			if (n >= 0) {
+				const ss2 = s.substring(n + "PC SOUND1 ".length).split(" ");
+				const cn = parseInt16(ss2[0]);
+				const on = parseInt16(ss2[1]);
+				const sn = parseInt16(ss2[2]);
+				this.sound1(cn, on, sn);
+				continue;
+			}
 		}
 		this.g.draw();
 	};
@@ -408,6 +426,18 @@ class NSPanCake extends HTMLElement {
 			}
 		}
 		this.g.draw();
+	}
+	sound1(cn, on, sn) {
+		if(this.audioch[cn]){
+			if(sn === 0xff){
+				this.audioch[cn].stop();
+			}else{
+				this.audioch[cn].type = "sine";
+				this.audioch[cn].frequency.setValueAtTime(440*(cn+1), this.audio.currentTime);
+				this.audioch[cn].connect(this.audio.destination);
+				this.audioch[cn].start();
+			}
+		}
 	}
 }
 
