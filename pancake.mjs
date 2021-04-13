@@ -189,12 +189,7 @@ class NSPanCake extends HTMLElement {
 		this.g.init();
 
 		this.audio = new AudioContext();
-		this.audioch = [
-			this.audio.createOscillator(),
-			this.audio.createOscillator(),
-			this.audio.createOscillator(),
-			this.audio.createOscillator(),
-		];
+		this.audioch = new Array(4);
 	}
 	drawDot(x, y, c) {
 		if (x >= 0 && x < dw && y >= 0 && y < dh) {
@@ -556,15 +551,46 @@ class NSPanCake extends HTMLElement {
 		this.g.draw();
 	}
 	sound1(cn, on, sn) {
-		if(this.audioch[cn]){
-			if(sn === 0xff){
-				this.audioch[cn].stop();
-			}else{
-				this.audioch[cn].type = "sine";
-				this.audioch[cn].frequency.setValueAtTime(440*(cn+1), this.audio.currentTime);
-				this.audioch[cn].connect(this.audio.destination);
-				this.audioch[cn].start();
-			}
+		let channel = cn % this.audioch.length;
+
+		this.audioch[channel]?.stop();
+		this.audioch[channel] = undefined;
+
+		if(sn === 0xff){
+			// none
+		}else{
+			let key = (sn & 0x0f) % 13;
+			let tone = ((sn & 0xf0) >> 4) % 4;
+			let octave = on % 8;
+			let t = 0;//this.audio.currentTime;
+
+			let gain = this.audio.createGain();
+			gain.gain.setValueAtTime(0.2, t);
+			gain.connect(this.audio.destination);
+
+			this.audioch[channel] = this.audio.createOscillator();
+			this.audioch[channel].type = [
+				"square",
+				"sine",
+				"triangle",	// 暫定
+				"sawtooth",	// 暫定
+			][tone];
+			this.audioch[channel].frequency.setValueAtTime([
+				261.626,
+				277.183,
+				293.665,
+				311.127,
+				329.628,
+				349.228,
+				369.994,
+				391.995,
+				415.305,
+				440.000,
+				466.164,
+				493.883,
+			][key]*Math.pow(2, octave-4), t);
+			this.audioch[channel].connect(gain);
+			this.audioch[channel].start();
 		}
 	}
 	spriteStart(bg) {
