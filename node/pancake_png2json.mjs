@@ -1,30 +1,12 @@
 import fs from "fs";
 import { PNGReader } from "./PNGReader.mjs";
 import { PANCAKE_PALETTE } from "../PANCAKE_PALETTE.mjs";
+import { getNearColor } from "../getNearColor.mjs";
 
 const convert = async (fn, ratio, transcolor) => {
 	const path = "../";
 	const sprs = JSON.parse(fs.readFileSync(path + fn + ".json", "utf-8"));
 	//console.log(sprs);
-
-	const getNearColor = (c) => {
-		const n = PANCAKE_PALETTE.findIndex(p => p[0] == c[0] && p[1] == c[1] && p[2] == c[2]);
-		if (n >= 0) {
-			return n;
-		}
-		let min = 255;
-		let idx = -1;
-		for (let i = 0; i < PANCAKE_PALETTE.length; i++) {
-			const p = PANCAKE_PALETTE[i];
-			const d = Math.abs(p[0] - c[0]) + Math.abs(p[1] - c[1]) + Math.abs(p[2] - c[2]);
-			if (d < min) {
-				min = d;
-				idx = i;
-			}
-		}
-		//console.log(idx, min, c, PANCAKE_PALETTE[idx]); // 74.png 77.png の青がだいぶ違う
-		return idx;
-	}
 
 	const png2pancake = (png) => {
 		const plt = png.palette;
@@ -37,7 +19,8 @@ const convert = async (fn, ratio, transcolor) => {
 			for (let j = 0; j < w; j++) {
 				const idx = png.pixels[(j * ratio) + png.width * (i * ratio)] * 3;
 				const c = [ plt[idx], plt[idx + 1], plt[idx + 2] ];
-				const n = getNearColor(c);
+				//console.log(idx, min, c, PANCAKE_PALETTE[idx]); // 74.png 77.png の青がだいぶ違う
+				const n = getNearColor(PANCAKE_PALETTE, c);
 				if (n < 0) {
 					console.log(c);
 					process.exit(1);
