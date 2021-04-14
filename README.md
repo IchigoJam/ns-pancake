@@ -1,6 +1,8 @@
 # ns-pancake
 PanCake web  
 https://ichigojam.github.io/ns-pancake/  
+IchigoJam web + PanCake
+https://fukuno.jig.jp/app/IchigoJam/pancake.html
 
 ## license
 CC BY-NC Natural Style Co. Ltd.  
