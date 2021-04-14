@@ -608,7 +608,7 @@ class NSPanCake extends HTMLElement {
 				if (this.spritebg < 0x10) {
 					this.drawImage(this.spritebg);
 				} else {
-					this.clearDots(this.spritebg >> 4);
+					this.clearDots(this.spritebg & 0x0f);
 				}
 				for (let i = 0; i < MAX_SPRITE; i++) {
 					const sp = this.sprite[i];
