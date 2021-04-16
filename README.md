@@ -1,7 +1,7 @@
 # ns-pancake
 PanCake web  
 https://ichigojam.github.io/ns-pancake/  
-IchigoJam web + PanCake
+IchigoJam web + PanCake  
 https://fukuno.jig.jp/app/IchigoJam/pancake.html
 
 ## license
