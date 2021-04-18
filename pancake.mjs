@@ -652,20 +652,20 @@ class NSPanCake extends HTMLElement {
 		}
 	}
 	spriteMove(sn, px, py) {
-		const sp = this.sprite[sn];
+		const sp = this.getSprite(sn);
 		if (sp) {
 			sp.x = px;
 			sp.y = py;
 		}
 	}
 	spriteFlip(sn, fs) {
-		const sp = this.sprite[sn];
+		const sp = this.getSprite(sn);
 		if (sp) {
 			sp.flip = fs != 0;
 		}
 	}
 	spriteRotate(sn, ra) { // 00:0°,01:-90°,02:180°,03:90°
-		const sp = this.sprite[sn];
+		const sp = this.getSprite(sn);
 		if (sp) {
 			sp.rotate = ra;
 		}
